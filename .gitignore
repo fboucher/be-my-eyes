@@ -19,7 +19,8 @@ go.work
 go.work.sum
 
 # Binary output
-be-my-eyes
+/be-my-eyes
+be-my-eyes-*
 
 # Database files
 *.db
