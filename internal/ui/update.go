@@ -165,6 +165,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.history = msg.history
 			m.updateHistoryList()
+			
+			// Automatically load library if there are video IDs in history
+			if len(m.history) > 0 {
+				m.isLoading = true
+				m.statusMessage = "Loading library..."
+				cmds = append(cmds, m.refreshLibrary())
+			}
 		}
 
 	case videosLoadedMsg:
@@ -193,6 +200,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case connectionTestedMsg:
 		if msg.success {
 			m.statusMessage = "Connected"
+			// If we have history with video IDs, the library will be loaded automatically
+			// when historyLoadedMsg is processed
 		} else {
 			m.statusMessage = "Disconnected"
 			if msg.err != nil {
