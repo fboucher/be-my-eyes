@@ -61,7 +61,7 @@ type QAResponse struct {
 
 // VideosGetRequest represents the request to get video information
 type VideosGetRequest struct {
-	VideoIDs []string `json:"video_ids"`
+	VideoIDs []string `json:"video_ids,omitempty"`
 }
 
 // VideosGetResponse represents the response from the videos get API

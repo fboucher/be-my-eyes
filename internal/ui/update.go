@@ -56,23 +56,8 @@ func (m Model) testConnection() tea.Cmd {
 // refreshLibrary refreshes the video library from API
 func (m Model) refreshLibrary() tea.Cmd {
 	return func() tea.Msg {
-		// For now, we'll get videos from the history
-		// In a real app, you'd maintain a list of video IDs
-		videoIDs := make(map[string]bool)
-		for _, h := range m.history {
-			videoIDs[h.VideoID] = true
-		}
-
-		ids := make([]string, 0, len(videoIDs))
-		for id := range videoIDs {
-			ids = append(ids, id)
-		}
-
-		if len(ids) == 0 {
-			return videosLoadedMsg{videos: []models.Video{}, err: nil}
-		}
-
-		response, err := m.apiClient.GetVideos(ids)
+		// Call GetAllVideos to fetch all available videos from the API
+		response, err := m.apiClient.GetAllVideos()
 		if err != nil {
 			return videosLoadedMsg{videos: nil, err: err}
 		}
@@ -166,12 +151,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.history = msg.history
 			m.updateHistoryList()
 			
-			// Automatically load library if there are video IDs in history
-			if len(m.history) > 0 {
-				m.isLoading = true
-				m.statusMessage = "Loading library..."
-				cmds = append(cmds, m.refreshLibrary())
-			}
+			// Automatically load library from API on startup
+			m.isLoading = true
+			m.statusMessage = "Loading library..."
+			cmds = append(cmds, m.refreshLibrary())
 		}
 
 	case videosLoadedMsg:

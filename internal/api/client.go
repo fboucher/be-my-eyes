@@ -88,6 +88,24 @@ func (c *Client) GetVideos(videoIDs []string) (*models.VideosGetResponse, error)
 	return &response, nil
 }
 
+// GetAllVideos retrieves information about all videos (calls API without video_ids)
+func (c *Client) GetAllVideos() (*models.VideosGetResponse, error) {
+	// Call with empty request to get all videos
+	req := models.VideosGetRequest{}
+
+	respBody, err := c.doRequest("POST", "/videos/get", req)
+	if err != nil {
+		return nil, err
+	}
+
+	var response models.VideosGetResponse
+	if err := json.Unmarshal(respBody, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &response, nil
+}
+
 // AskQuestion sends a question about a video to the API and returns the response
 func (c *Client) AskQuestion(videoID, question string) (*models.QAResponse, error) {
 	req := models.QARequest{
