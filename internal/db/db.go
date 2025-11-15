@@ -62,6 +62,7 @@ func (db *DB) initSchema() error {
 	CREATE TABLE IF NOT EXISTS query_history (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		video_id TEXT NOT NULL,
+		video_title TEXT NOT NULL,
 		question TEXT NOT NULL,
 		answer TEXT NOT NULL,
 		error TEXT,
@@ -87,13 +88,13 @@ func (db *DB) Close() error {
 }
 
 // SaveQuery saves a query and its result to the database
-func (db *DB) SaveQuery(videoID, question, answer string, errMsg *string, status string) error {
+func (db *DB) SaveQuery(videoID, videoTitle, question, answer string, errMsg *string, status string) error {
 	query := `
-	INSERT INTO query_history (video_id, question, answer, error, status, created_at)
-	VALUES (?, ?, ?, ?, ?, ?)
+	INSERT INTO query_history (video_id, video_title, question, answer, error, status, created_at)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := db.conn.Exec(query, videoID, question, answer, errMsg, status, time.Now())
+	_, err := db.conn.Exec(query, videoID, videoTitle, question, answer, errMsg, status, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to save query: %w", err)
 	}
@@ -104,7 +105,7 @@ func (db *DB) SaveQuery(videoID, question, answer string, errMsg *string, status
 // GetAllHistory retrieves all query history ordered by creation time (newest first)
 func (db *DB) GetAllHistory() ([]models.QueryHistory, error) {
 	query := `
-	SELECT id, video_id, question, answer, error, status, created_at
+	SELECT id, video_id, video_title, question, answer, error, status, created_at
 	FROM query_history
 	ORDER BY created_at DESC
 	`
@@ -120,7 +121,7 @@ func (db *DB) GetAllHistory() ([]models.QueryHistory, error) {
 		var h models.QueryHistory
 		var errMsg sql.NullString
 
-		if err := rows.Scan(&h.ID, &h.VideoID, &h.Question, &h.Answer, &errMsg, &h.Status, &h.CreatedAt); err != nil {
+		if err := rows.Scan(&h.ID, &h.VideoID, &h.VideoTitle, &h.Question, &h.Answer, &errMsg, &h.Status, &h.CreatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
@@ -141,7 +142,7 @@ func (db *DB) GetAllHistory() ([]models.QueryHistory, error) {
 // GetHistoryByVideoID retrieves query history for a specific video
 func (db *DB) GetHistoryByVideoID(videoID string) ([]models.QueryHistory, error) {
 	query := `
-	SELECT id, video_id, question, answer, error, status, created_at
+	SELECT id, video_id, video_title, question, answer, error, status, created_at
 	FROM query_history
 	WHERE video_id = ?
 	ORDER BY created_at DESC
@@ -158,7 +159,7 @@ func (db *DB) GetHistoryByVideoID(videoID string) ([]models.QueryHistory, error)
 		var h models.QueryHistory
 		var errMsg sql.NullString
 
-		if err := rows.Scan(&h.ID, &h.VideoID, &h.Question, &h.Answer, &errMsg, &h.Status, &h.CreatedAt); err != nil {
+		if err := rows.Scan(&h.ID, &h.VideoID, &h.VideoTitle, &h.Question, &h.Answer, &errMsg, &h.Status, &h.CreatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 

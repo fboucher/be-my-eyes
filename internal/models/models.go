@@ -27,13 +27,14 @@ type VideoMetadata struct {
 
 // QueryHistory represents a saved question/answer pair from the history
 type QueryHistory struct {
-	ID        int       `json:"id"`
-	VideoID   string    `json:"video_id"`
-	Question  string    `json:"question"`
-	Answer    string    `json:"answer"`
-	Error     *string   `json:"error"`
-	Status    string    `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         int       `json:"id"`
+	VideoID    string    `json:"video_id"`
+	VideoTitle string    `json:"video_title"`
+	Question   string    `json:"question"`
+	Answer     string    `json:"answer"`
+	Error      *string   `json:"error"`
+	Status     string    `json:"status"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // ChatMessage represents a message in the chat API request

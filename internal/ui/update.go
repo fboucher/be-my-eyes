@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -73,6 +72,10 @@ func (m Model) askQuestion(question string) tea.Cmd {
 	}
 
 	videoID := m.selectedVideo.VideoID
+	videoTitle := m.selectedVideo.Metadata.Title
+	if videoTitle == "" {
+		videoTitle = videoID
+	}
 
 	return func() tea.Msg {
 		response, err := m.apiClient.AskQuestion(videoID, question)
@@ -80,22 +83,11 @@ func (m Model) askQuestion(question string) tea.Cmd {
 			return questionAskedMsg{response: nil, err: err}
 		}
 
-		// Parse the chat response to extract the answer
-		var chatData struct {
-			Sections []struct {
-				SectionContent string `json:"section_content"`
-			} `json:"sections"`
-		}
-		
+		// Store the full chat_response JSON for detailed parsing in the view
 		answer := response.ChatResponse
-		if err := json.Unmarshal([]byte(response.ChatResponse), &chatData); err == nil {
-			if len(chatData.Sections) > 0 {
-				answer = chatData.Sections[0].SectionContent
-			}
-		}
 
-		// Save to database
-		if err := m.database.SaveQuery(videoID, question, answer, response.Error, response.Status); err != nil {
+		// Save to database with video title
+		if err := m.database.SaveQuery(videoID, videoTitle, question, answer, response.Error, response.Status); err != nil {
 			return questionAskedMsg{response: response, err: err}
 		}
 
@@ -283,6 +275,8 @@ func (m Model) updateQuestionDialog(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Submit question
 		question := m.questionInput.Value()
 		if question != "" {
+			// Close dialog immediately and show spinner
+			m.viewMode = MainView
 			m.isLoading = true
 			m.statusMessage = "Asking question..."
 			cmds = append(cmds, m.askQuestion(question))

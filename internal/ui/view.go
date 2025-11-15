@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -185,6 +186,12 @@ func (m Model) renderQueryDetails() string {
 	q := m.selectedQuery
 	var b strings.Builder
 
+	// Display video title if available
+	if q.VideoTitle != "" {
+		b.WriteString(fmt.Sprintf("Video: %s\n", q.VideoTitle))
+	}
+	b.WriteString(fmt.Sprintf("Video ID: %s\n\n", q.VideoID))
+
 	b.WriteString("Question:\n")
 	b.WriteString(q.Question)
 	b.WriteString("\n\n")
@@ -194,9 +201,68 @@ func (m Model) renderQueryDetails() string {
 		b.WriteString(*q.Error)
 		b.WriteString("\n")
 	} else {
-		b.WriteString("Answer:\n")
-		b.WriteString(q.Answer)
-		b.WriteString("\n")
+		b.WriteString("Answer:\n\n")
+		
+		// Parse the chat_response JSON to extract structured content
+		var chatData struct {
+			Sections []struct {
+				SectionID      string      `json:"section_id"`
+				SectionType    string      `json:"section_type"`
+				SectionContent interface{} `json:"section_content"`
+			} `json:"sections"`
+		}
+		
+		if err := json.Unmarshal([]byte(q.Answer), &chatData); err == nil && len(chatData.Sections) > 0 {
+			for _, section := range chatData.Sections {
+				if section.SectionType == "markdown" {
+					// Display markdown content
+					if content, ok := section.SectionContent.(string); ok {
+						b.WriteString(content)
+						b.WriteString("\n\n")
+					}
+				} else if section.SectionType == "video-clips-info" {
+					// Parse video clips and display as table
+					if contentMap, ok := section.SectionContent.(map[string]interface{}); ok {
+						if videoClips, ok := contentMap["video_clips"].([]interface{}); ok {
+							b.WriteString("Video Clips:\n\n")
+							b.WriteString("| Start Time | End Time | Info |\n")
+							b.WriteString("|------------|----------|------|\n")
+							
+							for _, clipInterface := range videoClips {
+								if clip, ok := clipInterface.(map[string]interface{}); ok {
+									startTime := 0.0
+									endTime := 0.0
+									info := ""
+									
+									if st, ok := clip["video_clip_start_time"].(float64); ok {
+										startTime = st
+									}
+									if et, ok := clip["video_clip_end_time"].(float64); ok {
+										endTime = et
+									}
+									if i, ok := clip["video_clip_info"].(string); ok {
+										info = i
+									}
+									
+									// Truncate info if too long
+									if len(info) > 100 {
+										info = info[:97] + "..."
+									}
+									
+									b.WriteString(fmt.Sprintf("| %.2fs | %.2fs | %s |\n", 
+										startTime, endTime, info))
+								}
+							}
+							b.WriteString("\n")
+						}
+					}
+				}
+			}
+		} else {
+			// Fallback: display raw answer if parsing fails
+			b.WriteString(q.Answer)
+			b.WriteString("\n")
+		}
 	}
 
 	b.WriteString(fmt.Sprintf("\nStatus: %s\n", q.Status))
