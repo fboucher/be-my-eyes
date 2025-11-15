@@ -1,6 +1,8 @@
 module github.com/fboucher/be-my-eyes
 
-go 1.24.10
+go 1.24.0
+
+toolchain go1.24.5
 
 require (
 	github.com/charmbracelet/bubbles v0.21.0
