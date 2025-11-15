@@ -1,0 +1,91 @@
+# GoReleaser configuration for be-my-eyes
+# This file configures automated releases to multiple package managers
+
+project_name: be-my-eyes
+
+before:
+  hooks:
+    # Run tests before building
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: be-my-eyes
+    main: ./cmd/be-my-eyes
+    binary: be-my-eyes
+    
+    # Build for multiple platforms
+    goos:
+      - linux
+      - darwin
+    
+    goarch:
+      - amd64
+      - arm64
+    
+    # Build flags
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    
+    env:
+      - CGO_ENABLED=1
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    
+    files:
+      - README.md
+      - LICENSE
+      - QUICKSTART.md
+      - ARCHITECTURE.md
+      - CONTRIBUTING.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+
+# Homebrew tap
+brews:
+  - name: be-my-eyes
+    repository:
+      owner: fboucher
+      name: homebrew-tap
+    
+    folder: Formula
+    
+    homepage: https://github.com/fboucher/be-my-eyes
+    description: "Terminal UI for Reka Vision AI API"
+    
+    license: "MIT"
+    
+    dependencies:
+      - name: sqlite
+
+    install: |
+      bin.install "be-my-eyes"
+
+    test: |
+      system "#{bin}/be-my-eyes", "--version"
+
+# Future: Add AUR and other package managers
+# For now, this provides a foundation for packaging
