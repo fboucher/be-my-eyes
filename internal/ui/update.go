@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -83,11 +84,61 @@ func (m Model) askQuestion(question string) tea.Cmd {
 			return questionAskedMsg{response: nil, err: err}
 		}
 
-		// Store the full chat_response JSON for detailed parsing in the view
-		answer := response.ChatResponse
+		// Parse the chat_response JSON string to extract structured data
+		// The chat_response field contains an escaped JSON string
+		var chatData struct {
+			Sections []struct {
+				SectionID      string      `json:"section_id"`
+				SectionType    string      `json:"section_type"`
+				SectionContent interface{} `json:"section_content"`
+			} `json:"sections"`
+		}
 
-		// Save to database with video title
-		if err := m.database.SaveQuery(videoID, videoTitle, question, answer, response.Error, response.Status); err != nil {
+		// Default answer is the raw response in case parsing fails
+		globalAnswer := response.ChatResponse
+		var videoClips []models.VideoClip
+
+		// Try to parse the chat_response as JSON
+		if err := json.Unmarshal([]byte(response.ChatResponse), &chatData); err == nil {
+			// Successfully parsed, now extract the data
+			for _, section := range chatData.Sections {
+				if section.SectionType == "markdown" && section.SectionID == "1" {
+					// This is the global answer
+					if content, ok := section.SectionContent.(string); ok {
+						globalAnswer = content
+					}
+				} else if section.SectionType == "video-clips-info" {
+					// Extract video clips
+					if contentMap, ok := section.SectionContent.(map[string]interface{}); ok {
+						if clipsArray, ok := contentMap["video_clips"].([]interface{}); ok {
+							for _, clipInterface := range clipsArray {
+								if clipMap, ok := clipInterface.(map[string]interface{}); ok {
+									clip := models.VideoClip{}
+									
+									if clipID, ok := clipMap["video_clip_id"].(string); ok {
+										clip.ClipID = clipID
+									}
+									if startTime, ok := clipMap["video_clip_start_time"].(float64); ok {
+										clip.StartTime = startTime
+									}
+									if endTime, ok := clipMap["video_clip_end_time"].(float64); ok {
+										clip.EndTime = endTime
+									}
+									if info, ok := clipMap["video_clip_info"].(string); ok {
+										clip.Info = info
+									}
+									
+									videoClips = append(videoClips, clip)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Save to database with video title, parsed answer, and video clips
+		if err := m.database.SaveQuery(videoID, videoTitle, question, globalAnswer, videoClips, response.Error, response.Status); err != nil {
 			return questionAskedMsg{response: response, err: err}
 		}
 

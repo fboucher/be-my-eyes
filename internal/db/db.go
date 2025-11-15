@@ -70,8 +70,19 @@ func (db *DB) initSchema() error {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
+	CREATE TABLE IF NOT EXISTS video_clips (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		query_id INTEGER NOT NULL,
+		clip_id TEXT NOT NULL,
+		start_time REAL NOT NULL,
+		end_time REAL NOT NULL,
+		info TEXT NOT NULL,
+		FOREIGN KEY (query_id) REFERENCES query_history(id) ON DELETE CASCADE
+	);
+
 	CREATE INDEX IF NOT EXISTS idx_query_history_video_id ON query_history(video_id);
 	CREATE INDEX IF NOT EXISTS idx_query_history_created_at ON query_history(created_at);
+	CREATE INDEX IF NOT EXISTS idx_video_clips_query_id ON video_clips(query_id);
 	`
 
 	_, err := db.conn.Exec(query)
@@ -87,16 +98,50 @@ func (db *DB) Close() error {
 	return db.conn.Close()
 }
 
-// SaveQuery saves a query and its result to the database
-func (db *DB) SaveQuery(videoID, videoTitle, question, answer string, errMsg *string, status string) error {
+// SaveQuery saves a query and its result to the database along with video clips
+func (db *DB) SaveQuery(videoID, videoTitle, question, answer string, videoClips []models.VideoClip, errMsg *string, status string) error {
+	// Start a transaction
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Insert query history
 	query := `
 	INSERT INTO query_history (video_id, video_title, question, answer, error, status, created_at)
 	VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 
-	_, err := db.conn.Exec(query, videoID, videoTitle, question, answer, errMsg, status, time.Now())
+	result, err := tx.Exec(query, videoID, videoTitle, question, answer, errMsg, status, time.Now())
 	if err != nil {
 		return fmt.Errorf("failed to save query: %w", err)
+	}
+
+	// Get the inserted query ID
+	queryID, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("failed to get query ID: %w", err)
+	}
+
+	// Insert video clips if any
+	if len(videoClips) > 0 {
+		clipQuery := `
+		INSERT INTO video_clips (query_id, clip_id, start_time, end_time, info)
+		VALUES (?, ?, ?, ?, ?)
+		`
+
+		for _, clip := range videoClips {
+			_, err := tx.Exec(clipQuery, queryID, clip.ClipID, clip.StartTime, clip.EndTime, clip.Info)
+			if err != nil {
+				return fmt.Errorf("failed to save video clip: %w", err)
+			}
+		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return nil
@@ -128,6 +173,13 @@ func (db *DB) GetAllHistory() ([]models.QueryHistory, error) {
 		if errMsg.Valid {
 			h.Error = &errMsg.String
 		}
+
+		// Load video clips for this query
+		clips, err := db.getVideoClips(h.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load video clips: %w", err)
+		}
+		h.VideoClips = clips
 
 		history = append(history, h)
 	}
@@ -167,6 +219,13 @@ func (db *DB) GetHistoryByVideoID(videoID string) ([]models.QueryHistory, error)
 			h.Error = &errMsg.String
 		}
 
+		// Load video clips for this query
+		clips, err := db.getVideoClips(h.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load video clips: %w", err)
+		}
+		h.VideoClips = clips
+
 		history = append(history, h)
 	}
 
@@ -175,4 +234,35 @@ func (db *DB) GetHistoryByVideoID(videoID string) ([]models.QueryHistory, error)
 	}
 
 	return history, nil
+}
+
+// getVideoClips retrieves video clips for a specific query
+func (db *DB) getVideoClips(queryID int) ([]models.VideoClip, error) {
+	query := `
+	SELECT id, query_id, clip_id, start_time, end_time, info
+	FROM video_clips
+	WHERE query_id = ?
+	ORDER BY start_time ASC
+	`
+
+	rows, err := db.conn.Query(query, queryID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query video clips: %w", err)
+	}
+	defer rows.Close()
+
+	var clips []models.VideoClip
+	for rows.Next() {
+		var clip models.VideoClip
+		if err := rows.Scan(&clip.ID, &clip.QueryID, &clip.ClipID, &clip.StartTime, &clip.EndTime, &clip.Info); err != nil {
+			return nil, fmt.Errorf("failed to scan video clip: %w", err)
+		}
+		clips = append(clips, clip)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating video clip rows: %w", err)
+	}
+
+	return clips, nil
 }
