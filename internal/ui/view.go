@@ -203,7 +203,8 @@ func (m Model) renderQueryDetails() string {
 	} else {
 		b.WriteString("Answer:\n\n")
 		
-		// Parse the chat_response JSON to extract structured content
+		// The answer field contains the chat_response which is a JSON string
+		// First, parse the JSON string to get the sections structure
 		var chatData struct {
 			Sections []struct {
 				SectionID      string      `json:"section_id"`
@@ -212,6 +213,7 @@ func (m Model) renderQueryDetails() string {
 			} `json:"sections"`
 		}
 		
+		// The q.Answer is the chat_response string, which itself is JSON
 		if err := json.Unmarshal([]byte(q.Answer), &chatData); err == nil && len(chatData.Sections) > 0 {
 			for _, section := range chatData.Sections {
 				if section.SectionType == "markdown" {
@@ -244,9 +246,9 @@ func (m Model) renderQueryDetails() string {
 										info = i
 									}
 									
-									// Truncate info if too long
-									if len(info) > 100 {
-										info = info[:97] + "..."
+									// Truncate info if too long for display
+									if len(info) > 150 {
+										info = info[:147] + "..."
 									}
 									
 									b.WriteString(fmt.Sprintf("| %.2fs | %.2fs | %s |\n", 
