@@ -273,12 +273,11 @@ https://github.com/fboucher/be-my-eyes/issues
 
 ## Roadmap
 
+- [ ] Packaging to be able to install via apt, brew, yay
 - [ ] Video upload functionality
-- [ ] Advanced filtering and search
-- [ ] Export query history
-- [ ] Custom themes
-- [ ] Configurable key bindings
-- [ ] Multiple API key profiles
+- [ ] Search across all videos
+- [ ] Images functionalyties
+
 
 ---
 
