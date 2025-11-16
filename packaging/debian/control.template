@@ -1,0 +1,10 @@
+Package: be-my-eyes
+Version: {{VERSION}}
+Section: utils
+Priority: optional
+Architecture: {{ARCH}}
+Maintainer: François Boucher <maintainer@example.com>
+Depends:
+Homepage: https://github.com/fboucher/be-my-eyes
+Description: Terminal UI for interacting with the Reka Vision AI API
+ A fast, interactive TUI to browse indexed videos, ask AI questions, and review query history.

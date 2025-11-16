@@ -1,0 +1,46 @@
+class BeMyEyes < Formula
+  desc "Terminal UI for interacting with the Reka Vision AI API"
+  homepage "https://github.com/fboucher/be-my-eyes"
+  version "{{VERSION}}"
+  license "MIT"
+
+  on_macos do
+    if Hardware::CPU.arm?
+      url "https://github.com/fboucher/be-my-eyes/releases/download/v#{version}/be-my-eyes-darwin-arm64"
+      sha256 "REPLACE_ME_ARM64"
+    else
+      url "https://github.com/fboucher/be-my-eyes/releases/download/v#{version}/be-my-eyes-darwin-amd64"
+      sha256 "REPLACE_ME_AMD64"
+    end
+  end
+
+  on_linux do
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/fboucher/be-my-eyes/releases/download/v#{version}/be-my-eyes-linux-arm64"
+      sha256 "REPLACE_ME_LINUX_ARM64"
+    else
+      url "https://github.com/fboucher/be-my-eyes/releases/download/v#{version}/be-my-eyes-linux-amd64"
+      sha256 "REPLACE_ME_LINUX_AMD64"
+    end
+  end
+
+  def install
+    if OS.mac?
+      if Hardware::CPU.arm?
+        bin.install "be-my-eyes-darwin-arm64" => "be-my-eyes"
+      else
+        bin.install "be-my-eyes-darwin-amd64" => "be-my-eyes"
+      end
+    else
+      if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+        bin.install "be-my-eyes-linux-arm64" => "be-my-eyes"
+      else
+        bin.install "be-my-eyes-linux-amd64" => "be-my-eyes"
+      end
+    end
+  end
+
+  test do
+    assert_match "be-my-eyes", shell_output("#{bin}/be-my-eyes --version")
+  end
+end
