@@ -1,0 +1,93 @@
+name: release-packaging
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-matrix:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            artifact: be-my-eyes-linux-amd64
+          - goos: linux
+            goarch: arm64
+            artifact: be-my-eyes-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            artifact: be-my-eyes-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            artifact: be-my-eyes-darwin-arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - name: Build
+        run: |
+          VERSION="${GITHUB_REF##*/}" # tag like v0.1.0
+          VERSION="${VERSION#v}"      # strip v prefix
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+            go build -ldflags "-s -w -X github.com/fboucher/be-my-eyes/internal/version.Version=$VERSION" \
+            -o dist/${{ matrix.artifact }} ./cmd/be-my-eyes
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
+  deb-packages:
+    name: Build .deb packages
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: be-my-eyes-linux-${{ matrix.arch }}
+          path: dist/
+      - name: Build .deb
+        run: |
+          chmod +x packaging/debian/build-deb.sh
+          VERSION="${GITHUB_REF##*/}"; VERSION="${VERSION#v}"; export VERSION
+          ARCH=${{ matrix.arch }} OUTDIR=dist bash packaging/debian/build-deb.sh
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.arch }}
+          path: dist/*.deb
+
+  release:
+    name: Create GitHub Release
+    needs: [build-matrix, deb-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum be-my-eyes-* > SHA256SUMS.txt
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/be-my-eyes-*
+            dist/*.deb
+            dist/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

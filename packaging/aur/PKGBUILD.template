@@ -1,0 +1,23 @@
+pkgname=be-my-eyes
+pkgver={{VERSION}}
+pkgrel=1
+pkgdesc="Terminal UI for interacting with the Reka Vision AI API"
+arch=('x86_64' 'aarch64')
+url="https://github.com/fboucher/be-my-eyes"
+license=('MIT')
+makedepends=('go' 'git')
+depends=()
+source=("$pkgname-$pkgver.tar.gz::https://github.com/fboucher/be-my-eyes/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$pkgname-$pkgver"
+  export CGO_ENABLED=1
+  go build -ldflags "-s -w -X github.com/fboucher/be-my-eyes/internal/version.Version=$pkgver" -o "$pkgname" ./cmd/be-my-eyes
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
