@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/fboucher/be-my-eyes/internal/models"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // DB represents the database connection
@@ -22,14 +22,14 @@ func dbPath() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
-	
+
 	configDir := filepath.Join(homeDir, ".config", "be-my-eyes")
-	
+
 	// Create config directory if it doesn't exist
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create config directory: %w", err)
 	}
-	
+
 	return filepath.Join(configDir, "history.db"), nil
 }
 

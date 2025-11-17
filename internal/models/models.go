@@ -4,11 +4,11 @@ import "time"
 
 // Video represents a video in the library with its indexing status and metadata
 type Video struct {
-	VideoID       string        `json:"video_id"`
-	URL           string        `json:"url"`
-	IndexingStatus string       `json:"indexing_status"` // indexed, processing, failed
-	Metadata      VideoMetadata `json:"metadata"`
-	IndexingType  string        `json:"indexing_type"`
+	VideoID        string        `json:"video_id"`
+	URL            string        `json:"url"`
+	IndexingStatus string        `json:"indexing_status"` // indexed, processing, failed
+	Metadata       VideoMetadata `json:"metadata"`
+	IndexingType   string        `json:"indexing_type"`
 }
 
 // VideoMetadata contains detailed information about a video
@@ -27,25 +27,25 @@ type VideoMetadata struct {
 
 // QueryHistory represents a saved question/answer pair from the history
 type QueryHistory struct {
-	ID         int          `json:"id"`
-	VideoID    string       `json:"video_id"`
-	VideoTitle string       `json:"video_title"`
-	Question   string       `json:"question"`
-	Answer     string       `json:"answer"`
-	Error      *string      `json:"error"`
-	Status     string       `json:"status"`
-	CreatedAt  time.Time    `json:"created_at"`
-	VideoClips []VideoClip  `json:"video_clips"`
+	ID         int         `json:"id"`
+	VideoID    string      `json:"video_id"`
+	VideoTitle string      `json:"video_title"`
+	Question   string      `json:"question"`
+	Answer     string      `json:"answer"`
+	Error      *string     `json:"error"`
+	Status     string      `json:"status"`
+	CreatedAt  time.Time   `json:"created_at"`
+	VideoClips []VideoClip `json:"video_clips"`
 }
 
 // VideoClip represents a video clip with timing information
 type VideoClip struct {
-	ID          int     `json:"id"`
-	QueryID     int     `json:"query_id"`
-	ClipID      string  `json:"clip_id"`
-	StartTime   float64 `json:"start_time"`
-	EndTime     float64 `json:"end_time"`
-	Info        string  `json:"info"`
+	ID        int     `json:"id"`
+	QueryID   int     `json:"query_id"`
+	ClipID    string  `json:"clip_id"`
+	StartTime float64 `json:"start_time"`
+	EndTime   float64 `json:"end_time"`
+	Info      string  `json:"info"`
 }
 
 // ChatMessage represents a message in the chat API request
@@ -62,13 +62,13 @@ type QARequest struct {
 
 // QAResponse represents the response from the QA chat API
 type QAResponse struct {
-	ChatResponse string  `json:"chat_response"`
-	SystemMessage *string `json:"system_message"`
-	Error        *string `json:"error"`
-	Status       string  `json:"status"`
-	DebugChunks  *string `json:"debug_chunks"`
-	DebugPredictedStartTime string `json:"debug_predicted_start_time"`
-	DebugPredictedEndTime   string `json:"debug_predicted_end_time"`
+	ChatResponse            string  `json:"chat_response"`
+	SystemMessage           *string `json:"system_message"`
+	Error                   *string `json:"error"`
+	Status                  string  `json:"status"`
+	DebugChunks             *string `json:"debug_chunks"`
+	DebugPredictedStartTime string  `json:"debug_predicted_start_time"`
+	DebugPredictedEndTime   string  `json:"debug_predicted_end_time"`
 }
 
 // VideosGetRequest represents the request to get video information

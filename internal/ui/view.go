@@ -201,25 +201,25 @@ func (m Model) renderQueryDetails() string {
 		b.WriteString("\n")
 	} else {
 		b.WriteString("Answer:\n\n")
-		
+
 		// Display the global answer (already parsed and stored in the database)
 		b.WriteString(q.Answer)
 		b.WriteString("\n\n")
-		
+
 		// Display video clips if any
 		if len(q.VideoClips) > 0 {
 			b.WriteString("Video Clips:\n\n")
 			b.WriteString("| Start Time | End Time | Info |\n")
 			b.WriteString("|------------|----------|------|\n")
-			
+
 			for _, clip := range q.VideoClips {
 				info := clip.Info
 				// Truncate info if too long for display
 				if len(info) > 150 {
 					info = info[:147] + "..."
 				}
-				
-				b.WriteString(fmt.Sprintf("| %.2fs | %.2fs | %s |\n", 
+
+				b.WriteString(fmt.Sprintf("| %.2fs | %.2fs | %s |\n",
 					clip.StartTime, clip.EndTime, info))
 			}
 			b.WriteString("\n")
