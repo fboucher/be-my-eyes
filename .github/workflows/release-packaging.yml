@@ -38,8 +38,19 @@ jobs:
           go-version: '1.24'
       - name: Build
         run: |
-          VERSION="${GITHUB_REF##*/}" # tag like v0.1.0
-          VERSION="${VERSION#v}"      # strip v prefix
+          # choose version: prefer manual input (workflow_dispatch) then fall back to ref
+          VERSION_FROM_REF="${GITHUB_REF##*/}"      # e.g. v1.2.3 or main
+          VERSION_INPUT="${{ github.event.inputs.version || '' }}"   # empty if not supplied in non-dispatch runs
+          if [ -n "$VERSION_INPUT" ]; then
+            VERSION="$VERSION_INPUT"
+          else
+            VERSION="$VERSION_FROM_REF"
+          fi
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "VERSION_FROM_REF=$VERSION_FROM_REF"
+          echo "VERSION_INPUT=$VERSION_INPUT"
+          echo "Using VERSION=$VERSION"
+          VERSION="${VERSION#v}"      # strip leading v if present
           GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
             go build -ldflags "-s -w -X github.com/fboucher/be-my-eyes/internal/version.Version=$VERSION" \
             -o dist/${{ matrix.artifact }} ./cmd/be-my-eyes
@@ -65,8 +76,17 @@ jobs:
           path: dist/
       - name: Build .deb
         run: |
-          chmod +x packaging/debian/build-deb.sh
-          VERSION="${GITHUB_REF##*/}"; VERSION="${VERSION#v}"; export VERSION
+          # choose version for packaging (prefer workflow input)
+          VERSION_FROM_REF="${GITHUB_REF##*/}"
+          VERSION_INPUT="${{ github.event.inputs.version || '' }}"
+          if [ -n "$VERSION_INPUT" ]; then
+            VERSION="$VERSION_INPUT"
+          else
+            VERSION="$VERSION_FROM_REF"
+          fi
+          VERSION="${VERSION#v}"
+          echo "Packaging: Using VERSION=$VERSION"
+          export VERSION
           ARCH=${{ matrix.arch }} OUTDIR=dist bash packaging/debian/build-deb.sh
       - name: Upload .deb
         uses: actions/upload-artifact@v4
