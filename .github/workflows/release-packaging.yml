@@ -112,11 +112,33 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: dist
-      - name: Generate checksums
+          merge-multiple: true
+      - name: List dist contents after download (debug)
+        run: |
+          echo "Contents of dist after download:"
+          ls -la dist || true
+      - name: Generate checksums (only if files exist)
         run: |
           cd dist
-          # Only checksum regular files matching the pattern to avoid directories
-          find . -maxdepth 1 -type f -name 'be-my-eyes-*' -exec sha256sum {} + > SHA256SUMS.txt
+          # enable nullglob so globs that match nothing expand to empty list
+          shopt -s nullglob
+          # include both binary artifacts and deb packages
+          files=(be-my-eyes-* *.deb)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No artifacts found in dist/ — aborting (no SHA256SUMS.txt will be created)" >&2
+            exit 1
+          fi
+          echo "Found artifacts:"
+          ls -la "${files[@]}"
+          sha256sum "${files[@]}" > SHA256SUMS.txt
+          echo "Generated SHA256SUMS.txt:"
+          cat SHA256SUMS.txt
+      - name: Ensure SHA256SUMS.txt exists and is non-empty
+        run: |
+          if [ ! -s dist/SHA256SUMS.txt ]; then
+            echo "dist/SHA256SUMS.txt is missing or empty; aborting release creation" >&2
+            exit 1
+          fi
       - name: Create and push tag
         run: |
           git config user.name "github-actions[bot]"
