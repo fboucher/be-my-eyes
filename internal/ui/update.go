@@ -114,7 +114,7 @@ func (m Model) askQuestion(question string) tea.Cmd {
 							for _, clipInterface := range clipsArray {
 								if clipMap, ok := clipInterface.(map[string]interface{}); ok {
 									clip := models.VideoClip{}
-									
+
 									if clipID, ok := clipMap["video_clip_id"].(string); ok {
 										clip.ClipID = clipID
 									}
@@ -127,7 +127,7 @@ func (m Model) askQuestion(question string) tea.Cmd {
 									if info, ok := clipMap["video_clip_info"].(string); ok {
 										clip.Info = info
 									}
-									
+
 									videoClips = append(videoClips, clip)
 								}
 							}
@@ -193,7 +193,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.history = msg.history
 			m.updateHistoryList()
-			
+
 			// Automatically load library from API on startup
 			m.isLoading = true
 			m.statusMessage = "Loading library..."
