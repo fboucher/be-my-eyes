@@ -1,6 +1,4 @@
-# GoReleaser configuration for be-my-eyes
-# This file configures automated releases to multiple package managers
-
+version: 2
 project_name: be-my-eyes
 
 before:
