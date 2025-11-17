@@ -67,7 +67,7 @@ brews:
   - name: be-my-eyes
     repository:
       owner: fboucher
-      name: homebrew-tap
+      name: reka-tap
     
     folder: Formula
     
