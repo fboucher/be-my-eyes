@@ -107,7 +107,8 @@ jobs:
       - name: Generate checksums
         run: |
           cd dist
-          sha256sum be-my-eyes-* > SHA256SUMS.txt
+          # Only checksum regular files matching the pattern to avoid directories
+          find . -maxdepth 1 -type f -name 'be-my-eyes-*' -exec sha256sum {} + > SHA256SUMS.txt
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
