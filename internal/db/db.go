@@ -105,7 +105,12 @@ func (db *DB) SaveQuery(videoID, videoTitle, question, answer string, videoClips
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if rerr := tx.Rollback(); rerr != nil && rerr != sql.ErrTxDone {
+			// rollback failed; log and move on
+			fmt.Printf("transaction rollback error: %v\n", rerr)
+		}
+	}()
 
 	// Insert query history
 	query := `
