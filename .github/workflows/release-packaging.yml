@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - main
   workflow_dispatch:  # Add this to enable manual triggering
     inputs:
       version:
@@ -99,7 +101,11 @@ jobs:
     needs: [build-matrix, deb-packages]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -109,9 +115,24 @@ jobs:
           cd dist
           # Only checksum regular files matching the pattern to avoid directories
           find . -maxdepth 1 -type f -name 'be-my-eyes-*' -exec sha256sum {} + > SHA256SUMS.txt
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="v0.0.${{ github.run_number }}"
+          echo "Using tag: $TAG"
+          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
+          else
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v0.0.${{ github.run_number }}
           files: |
             dist/be-my-eyes-*
             dist/*.deb
