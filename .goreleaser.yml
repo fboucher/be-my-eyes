@@ -69,7 +69,7 @@ brews:
       owner: fboucher
       name: reka-tap
     
-    folder: Formula
+    #folder: Formula
     
     homepage: https://github.com/fboucher/be-my-eyes
     description: "Terminal UI for Reka Vision AI API"
