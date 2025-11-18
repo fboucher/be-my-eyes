@@ -24,19 +24,26 @@ builds:
     # Build flags
     ldflags:
       - -s -w
-      - -X main.version={{.Version}}
-      - -X main.commit={{.Commit}}
-      - -X main.date={{.Date}}
+      - -X github.com/fboucher/be-my-eyes/internal/version.Version={{.Version}}
     
-    env:
-      - CGO_ENABLED=1
-    
-    # Configure cross-compilation for ARM64
+    # Configure cross-compilation for ARM64 Linux only
     overrides:
       - goos: linux
         goarch: arm64
         env:
           - CC=aarch64-linux-gnu-gcc
+          - CGO_ENABLED=1
+      - goos: linux
+        goarch: amd64
+        env:
+          - CGO_ENABLED=1
+      - goos: darwin
+        goarch: amd64
+        env:
+          - CGO_ENABLED=1
+      - goos: darwin
+        goarch: arm64
+        env:
           - CGO_ENABLED=1
 
 archives:

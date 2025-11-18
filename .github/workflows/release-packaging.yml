@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - main
   workflow_dispatch:  # Add this to enable manual triggering
     inputs:
       version:
@@ -102,12 +100,13 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    # Only run on tag pushes, not on every push to main
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: true
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -139,27 +138,15 @@ jobs:
             echo "dist/SHA256SUMS.txt is missing or empty; aborting release creation" >&2
             exit 1
           fi
-      - name: Create and push tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          TAG="v0.0.${{ github.run_number }}"
-          echo "Using tag: $TAG"
-          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping"
-          else
-            git tag -a "$TAG" -m "Release $TAG"
-            git push origin "$TAG"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v0.0.${{ github.run_number }}
-          files: |
-            dist/be-my-eyes-*
-            dist/*.deb
-            dist/SHA256SUMS.txt
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Creating release for tag: $TAG"
+          gh release create "$TAG" \
+            dist/be-my-eyes-* \
+            dist/*.deb \
+            dist/SHA256SUMS.txt \
+            --title "Release $TAG" \
+            --generate-notes
