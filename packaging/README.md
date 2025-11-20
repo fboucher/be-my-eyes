@@ -14,7 +14,7 @@ Artifacts land in `dist/`.
 The `PKGBUILD.template` is parameterized. Replace `{{VERSION}}` and submit to AUR as `PKGBUILD`. Generate `.SRCINFO` via `makepkg --printsrcinfo > .SRCINFO`.
 
 ### Homebrew
-`be-my-eyes.rb.template` is a formula template. Replace `{{VERSION}}` and SHA256 sums with release asset checksums, then commit into a tap repository (`fboucher/reka-tap`). Users install via:
+`be-my-eyes.rb.template` is a formula template. Replace `{{VERSION}}` and SHA256 sums with release asset checksums, then commit into a tap repository (`fboucher/homebrew-reka-tap`). Users install via:
 ```bash
 brew install fboucher/tap/be-my-eyes
 ```

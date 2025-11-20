@@ -83,8 +83,8 @@ nfpms:
     package_name: be-my-eyes
     vendor: François Boucher
     homepage: https://github.com/fboucher/be-my-eyes
-    maintainer: François Boucher <maintainer@example.com>
-    description: Terminal UI for interacting with the Reka Vision AI API
+    maintainer: François Boucher <frank@reka.com>
+    description: TUI for interacting with the Reka Vision AI API
     license: MIT
     
     formats:
@@ -109,12 +109,12 @@ brews:
   - name: be-my-eyes
     repository:
       owner: fboucher
-      name: reka-tap
+      name: homebrew-reka-tap
     
-    #folder: Formula
+    folder: Formula
     
     homepage: https://github.com/fboucher/be-my-eyes
-    description: "Terminal UI for Reka Vision AI API"
+    description: "TUI for Reka Vision AI API"
     
     license: "MIT"
     

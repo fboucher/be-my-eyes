@@ -36,7 +36,7 @@ git push origin v1.0.0
    - Create Debian packages (.deb for amd64 and arm64)
    - Generate checksums
    - Create a GitHub Release with all artifacts
-   - Update the Homebrew tap (fboucher/reka-tap) if the token is available
+   - Update the Homebrew tap (fboucher/homebrew-reka-tap) if the token is available
 
 ### 4. Verify the Release
 
@@ -54,7 +54,7 @@ Once the workflow completes successfully:
 3. Test the release by downloading and running a binary for your platform
 4. If Homebrew tap was updated, test the formula:
    ```bash
-   brew tap fboucher/reka-tap
+   brew tap fboucher/homebrew-reka-tap
    brew install be-my-eyes
    be-my-eyes --version
    ```
