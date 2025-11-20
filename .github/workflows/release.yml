@@ -3,57 +3,54 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v1.0.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  goreleaser:
-    name: Release - ${{ matrix.name }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        include:
-          - name: linux_amd64
-            goos: linux
-            goarch: amd64
-            runner: ubuntu-latest
-
-          - name: linux_arm64
-            goos: linux
-            goarch: arm64
-            runner: ubuntu-latest
-
-          - name: darwin_amd64
-            goos: darwin
-            goarch: amd64
-            runner: macos-latest
-
-          - name: darwin_arm64
-            goos: darwin
-            goarch: arm64
-            runner: macos-latest
-
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+      
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "TAG=$TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-
-      - name: Install ARM64 cross-compiler (Linux only)
-        if: ${{ matrix.name == 'linux_arm64' }}
-        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
-
-      - name: Check cross-compiler
-        if: ${{ matrix.name == 'linux_arm64' }}
-        run: which aarch64-linux-gnu-gcc || { echo "aarch64-linux-gnu-gcc not found"; exit 1; }
-
+      
+      - name: Install ARM64 cross-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+      
+      - name: Verify cross-compiler
+        run: |
+          which aarch64-linux-gnu-gcc || { echo "aarch64-linux-gnu-gcc not found"; exit 1; }
+          aarch64-linux-gnu-gcc --version
+      
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -63,6 +60,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          CGO_ENABLED: 1
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+      
+      - name: Upload release summary
+        run: |
+          echo "## Release ${{ steps.tag.outputs.tag }} completed successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts created:" >> $GITHUB_STEP_SUMMARY
+          echo "- Cross-platform binaries (Linux amd64/arm64, macOS amd64/arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "- Debian packages (.deb for amd64 and arm64)" >> $GITHUB_STEP_SUMMARY
+          echo "- Checksums file" >> $GITHUB_STEP_SUMMARY
+          echo "- Homebrew tap updated (if token provided)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View the release at: https://github.com/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY

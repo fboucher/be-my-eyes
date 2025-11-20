@@ -77,6 +77,33 @@ changelog:
       - '^chore:'
       - '^ci:'
 
+# Debian/RPM packages
+nfpms:
+  - id: packages
+    package_name: be-my-eyes
+    vendor: François Boucher
+    homepage: https://github.com/fboucher/be-my-eyes
+    maintainer: François Boucher <maintainer@example.com>
+    description: Terminal UI for interacting with the Reka Vision AI API
+    license: MIT
+    
+    formats:
+      - deb
+    
+    bindir: /usr/bin
+    
+    # Only build packages for Linux platforms
+    builds:
+      - be-my-eyes
+    
+    # Debian-specific metadata
+    deb:
+      fields:
+        Priority: optional
+    
+    # Dependencies
+    # Note: sqlite is a build dependency (CGO), not a runtime dependency for the binary
+
 # Homebrew tap
 brews:
   - name: be-my-eyes
