@@ -109,9 +109,7 @@ brews:
   - name: be-my-eyes
     repository:
       owner: fboucher
-      name: homebrew-reka-tap
-    
-    folder: Formula
+      name: homebrew-tap
     
     homepage: https://github.com/fboucher/be-my-eyes
     description: "TUI for Reka Vision AI API"
