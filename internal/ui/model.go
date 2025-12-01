@@ -33,6 +33,7 @@ const (
 	MenuView
 	HelpView
 	AboutView
+	UploadDialogView
 )
 
 // Model represents the TUI application state
@@ -65,6 +66,11 @@ type Model struct {
 	statusMessage string
 	isLoading     bool
 	err           error
+
+	// Upload dialog state
+	uploadTitleInput textarea.Model
+	uploadURLInput   textarea.Model
+	uploadFocus      int // 0: title, 1: url
 }
 
 // videoItem implements list.Item for the library list
@@ -178,21 +184,32 @@ func NewModel(apiClient *api.Client, database *db.DB) Model {
 		Foreground(lipgloss.Color("230")).
 		Bold(true)
 
+	// Initialize upload inputs
+	uploadTitleInput := textarea.New()
+	uploadTitleInput.Placeholder = "Enter video title..."
+	uploadURLInput := textarea.New()
+	uploadURLInput.Placeholder = "Enter video URL..."
+	uploadTitleInput.Focus()
+	uploadURLInput.Blur()
+
 	return Model{
-		apiClient:     apiClient,
-		database:      database,
-		activeSection: LibrarySection,
-		viewMode:      MainView,
-		spinner:       s,
-		libraryList:   libraryList,
-		historyList:   historyList,
-		detailsView:   detailsView,
-		questionInput: questionInput,
-		menuList:      menuList,
-		videos:        []models.Video{},
-		history:       []models.QueryHistory{},
-		statusMessage: "Disconnected",
-		isLoading:     false,
+		apiClient:        apiClient,
+		database:         database,
+		activeSection:    LibrarySection,
+		viewMode:         MainView,
+		spinner:          s,
+		libraryList:      libraryList,
+		historyList:      historyList,
+		detailsView:      detailsView,
+		questionInput:    questionInput,
+		menuList:         menuList,
+		videos:           []models.Video{},
+		history:          []models.QueryHistory{},
+		statusMessage:    "Disconnected",
+		isLoading:        false,
+		uploadTitleInput: uploadTitleInput,
+		uploadURLInput:   uploadURLInput,
+		uploadFocus:      0,
 	}
 }
 

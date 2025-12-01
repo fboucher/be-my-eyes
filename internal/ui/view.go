@@ -1,3 +1,4 @@
+// ...existing code...
 package ui
 
 import (
@@ -51,6 +52,8 @@ func (m Model) View() string {
 		return m.viewHelp()
 	case AboutView:
 		return m.viewAbout()
+	case UploadDialogView:
+		return m.viewUploadDialog()
 	default:
 		return m.viewMain()
 	}

@@ -3,12 +3,32 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/fboucher/be-my-eyes/internal/models"
 )
+
+// uploadVideo calls the external API to upload a video
+func (m Model) uploadVideo(title, url string) tea.Cmd {
+	return func() tea.Msg {
+		req := map[string]interface{}{
+			"index":                          true,
+			"video_name":                     title,
+			"video_url":                      url,
+			"video_start_absolute_timestamp": time.Now().Format("2006-01-02T15:04:05"),
+		}
+		_, err := m.apiClient.DoRawRequest("POST", "/videos/upload", req)
+		if err != nil {
+			return videosLoadedMsg{videos: nil, err: err}
+		}
+		return videosLoadedMsg{videos: nil, err: nil}
+	}
+}
+
+// ...existing code...
 
 // Messages for async operations
 
@@ -88,9 +108,9 @@ func (m Model) askQuestion(question string) tea.Cmd {
 		// The chat_response field contains an escaped JSON string
 		var chatData struct {
 			Sections []struct {
-				SectionID   string                 `json:"section_id"`
-				SectionType string                 `json:"section_type"`
-				Markdown    string                 `json:"markdown,omitempty"`
+				SectionID   string                   `json:"section_id"`
+				SectionType string                   `json:"section_type"`
+				Markdown    string                   `json:"markdown,omitempty"`
 				VideoClips  []map[string]interface{} `json:"video_clips,omitempty"`
 			} `json:"sections"`
 		}
@@ -268,6 +288,15 @@ func (m Model) updateMainView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Show help
 		m.viewMode = HelpView
 
+	case "u":
+		// Start upload dialog
+		m.viewMode = UploadDialogView
+		m.uploadFocus = 0
+		m.uploadTitleInput.Reset()
+		m.uploadTitleInput.Focus()
+		m.uploadURLInput.Reset()
+		m.uploadURLInput.Blur()
+		return m, nil
 	case "up", "k":
 		// Navigate up in active section or scroll details
 		if m.activeSection == StatusSection {
