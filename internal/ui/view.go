@@ -119,7 +119,9 @@ func (m Model) renderRightColumn(width int) string {
 	detailHeight := m.height - 5 // Account for footer
 
 	content := m.renderDetails()
-	m.detailsView.SetContent(content)
+	// Wrap the content to fit the width
+	wrappedContent := lipgloss.NewStyle().Width(width - 6).Render(content)
+	m.detailsView.SetContent(wrappedContent)
 	m.detailsView.Width = width - 4
 	m.detailsView.Height = detailHeight - 2
 
@@ -185,12 +187,6 @@ func (m Model) renderQueryDetails() string {
 	q := m.selectedQuery
 	var b strings.Builder
 
-	// Display video title if available
-	if q.VideoTitle != "" {
-		b.WriteString(fmt.Sprintf("Video: %s\n", q.VideoTitle))
-	}
-	b.WriteString(fmt.Sprintf("Video ID: %s\n\n", q.VideoID))
-
 	b.WriteString("Question:\n")
 	b.WriteString(q.Question)
 	b.WriteString("\n\n")
@@ -201,33 +197,8 @@ func (m Model) renderQueryDetails() string {
 		b.WriteString("\n")
 	} else {
 		b.WriteString("Answer:\n\n")
-
-		// Display the global answer (already parsed and stored in the database)
 		b.WriteString(q.Answer)
-		b.WriteString("\n\n")
-
-		// Display video clips if any
-		if len(q.VideoClips) > 0 {
-			b.WriteString("Video Clips:\n\n")
-			b.WriteString("| Start Time | End Time | Info |\n")
-			b.WriteString("|------------|----------|------|\n")
-
-			for _, clip := range q.VideoClips {
-				info := clip.Info
-				// Truncate info if too long for display
-				if len(info) > 150 {
-					info = info[:147] + "..."
-				}
-
-				b.WriteString(fmt.Sprintf("| %.2fs | %.2fs | %s |\n",
-					clip.StartTime, clip.EndTime, info))
-			}
-			b.WriteString("\n")
-		}
 	}
-
-	b.WriteString(fmt.Sprintf("\nStatus: %s\n", q.Status))
-	b.WriteString(fmt.Sprintf("Date: %s\n", q.CreatedAt.Format("2006-01-02 15:04:05")))
 
 	return b.String()
 }
@@ -241,7 +212,7 @@ func (m Model) renderFooter() string {
 		"x: menu",
 		"q: quit",
 		"tab: change section",
-		"↑↓: navigate",
+		"↑↓: navigate/scroll",
 	}
 	return footerStyle.Render(strings.Join(keys, ", "))
 }

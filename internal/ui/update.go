@@ -88,9 +88,10 @@ func (m Model) askQuestion(question string) tea.Cmd {
 		// The chat_response field contains an escaped JSON string
 		var chatData struct {
 			Sections []struct {
-				SectionID      string      `json:"section_id"`
-				SectionType    string      `json:"section_type"`
-				SectionContent interface{} `json:"section_content"`
+				SectionID   string                 `json:"section_id"`
+				SectionType string                 `json:"section_type"`
+				Markdown    string                 `json:"markdown,omitempty"`
+				VideoClips  []map[string]interface{} `json:"video_clips,omitempty"`
 			} `json:"sections"`
 		}
 
@@ -104,34 +105,26 @@ func (m Model) askQuestion(question string) tea.Cmd {
 			for _, section := range chatData.Sections {
 				if section.SectionType == "markdown" && section.SectionID == "1" {
 					// This is the global answer
-					if content, ok := section.SectionContent.(string); ok {
-						globalAnswer = content
-					}
+					globalAnswer = section.Markdown
 				} else if section.SectionType == "video-clips-info" {
 					// Extract video clips
-					if contentMap, ok := section.SectionContent.(map[string]interface{}); ok {
-						if clipsArray, ok := contentMap["video_clips"].([]interface{}); ok {
-							for _, clipInterface := range clipsArray {
-								if clipMap, ok := clipInterface.(map[string]interface{}); ok {
-									clip := models.VideoClip{}
+					for _, clipMap := range section.VideoClips {
+						clip := models.VideoClip{}
 
-									if clipID, ok := clipMap["video_clip_id"].(string); ok {
-										clip.ClipID = clipID
-									}
-									if startTime, ok := clipMap["video_clip_start_time"].(float64); ok {
-										clip.StartTime = startTime
-									}
-									if endTime, ok := clipMap["video_clip_end_time"].(float64); ok {
-										clip.EndTime = endTime
-									}
-									if info, ok := clipMap["video_clip_info"].(string); ok {
-										clip.Info = info
-									}
-
-									videoClips = append(videoClips, clip)
-								}
-							}
+						if clipID, ok := clipMap["video_clip_id"].(string); ok {
+							clip.ClipID = clipID
 						}
+						if startTime, ok := clipMap["video_clip_start_time"].(float64); ok {
+							clip.StartTime = startTime
+						}
+						if endTime, ok := clipMap["video_clip_end_time"].(float64); ok {
+							clip.EndTime = endTime
+						}
+						if info, ok := clipMap["video_clip_info"].(string); ok {
+							clip.Info = info
+						}
+
+						videoClips = append(videoClips, clip)
 					}
 				}
 			}
@@ -276,28 +269,38 @@ func (m Model) updateMainView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.viewMode = HelpView
 
 	case "up", "k":
-		// Navigate up in active section
-		switch m.activeSection {
-		case LibrarySection:
-			m.libraryList, _ = m.libraryList.Update(msg)
-			m.updateSelectedVideo()
-		case HistorySection:
-			m.historyList, _ = m.historyList.Update(msg)
-			m.updateSelectedQuery()
+		// Navigate up in active section or scroll details
+		if m.activeSection == StatusSection {
+			// Scroll details view up
+			m.detailsView.LineUp(3)
+		} else {
+			switch m.activeSection {
+			case LibrarySection:
+				m.libraryList, _ = m.libraryList.Update(msg)
+				m.updateSelectedVideo()
+			case HistorySection:
+				m.historyList, _ = m.historyList.Update(msg)
+				m.updateSelectedQuery()
+			}
+			m.updateDetailView()
 		}
-		m.updateDetailView()
 
 	case "down", "j":
-		// Navigate down in active section
-		switch m.activeSection {
-		case LibrarySection:
-			m.libraryList, _ = m.libraryList.Update(msg)
-			m.updateSelectedVideo()
-		case HistorySection:
-			m.historyList, _ = m.historyList.Update(msg)
-			m.updateSelectedQuery()
+		// Navigate down in active section or scroll details
+		if m.activeSection == StatusSection {
+			// Scroll details view down
+			m.detailsView.LineDown(3)
+		} else {
+			switch m.activeSection {
+			case LibrarySection:
+				m.libraryList, _ = m.libraryList.Update(msg)
+				m.updateSelectedVideo()
+			case HistorySection:
+				m.historyList, _ = m.historyList.Update(msg)
+				m.updateSelectedQuery()
+			}
+			m.updateDetailView()
 		}
-		m.updateDetailView()
 
 	case "enter":
 		// Select item

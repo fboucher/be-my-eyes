@@ -1,6 +1,6 @@
 # Contributing to Be My Eyes
 
-Thank you for your interest in contributing to Be My Eyes! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing! This document provides guidelines for contributors.
 
 ## Getting Started
 
@@ -9,33 +9,32 @@ Thank you for your interest in contributing to Be My Eyes! This document provide
 - Go 1.21 or later
 - Git
 - A Reka AI API key for testing
-- Basic understanding of Go and TUI applications
 
 ### Development Setup
 
-1. **Fork and Clone**
+1. Fork and clone the repository:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/be-my-eyes.git
    cd be-my-eyes
    ```
 
-2. **Install Dependencies**
+2. Install dependencies:
+
    ```bash
    make deps
    ```
 
-3. **Set Up API Key**
+3. Set up your API key:
+
    ```bash
    export REKA_API_KEY=your_api_key_here
    ```
 
-4. **Build the Application**
+4. Build and run:
+
    ```bash
    make build
-   ```
-
-5. **Run the Application**
-   ```bash
    ./be-my-eyes
    ```
 
@@ -46,7 +45,6 @@ If you use VS Code, you can use the included dev container:
 1. Install Docker and the Remote-Containers extension
 2. Open the project in VS Code
 3. Click "Reopen in Container" when prompted
-4. All dependencies will be installed automatically
 
 ## Development Workflow
 
@@ -94,71 +92,33 @@ If you use VS Code, you can use the included dev container:
 
 ## Code Style
 
-### Go Conventions
-
-- Follow the [Effective Go](https://golang.org/doc/effective_go.html) guidelines
+- Follow [Effective Go](https://golang.org/doc/effective_go.html) guidelines
 - Use `gofmt` to format code (run `make fmt`)
-- Run `go vet` to catch common mistakes
 - Use meaningful variable and function names
+- Add helpful comments explaining complex logic
 
-### Comments
+## Project Structure
 
-Since this project is beginner-friendly, please add helpful comments:
+See [HOW-IT-WORKS.md](HOW-IT-WORKS.md) for detailed architecture information:
 
-```go
-// Good: Explains what and why
-// LoadHistory retrieves all query history from the database
-// sorted by creation time (newest first) for display in the UI
-func (m Model) loadHistory() tea.Cmd {
-    return func() tea.Msg {
-        history, err := m.database.GetAllHistory()
-        return historyLoadedMsg{history: history, err: err}
-    }
-}
-
-// Avoid: States the obvious
-// Gets history
-func (m Model) loadHistory() tea.Cmd {
-    ...
-}
+```text
+be-my-eyes/
+├── cmd/be-my-eyes/       # Application entry point
+├── internal/
+│   ├── api/              # Reka API client
+│   ├── config/           # Configuration management
+│   ├── db/               # SQLite database operations
+│   ├── models/           # Data models
+│   ├── ui/               # TUI components
+│   └── version/          # Version information
+└── Makefile              # Build automation
 ```
-
-### Package Organization
-
-- `cmd/`: Application entry points only
-- `internal/`: Private application code
-- Keep packages focused and cohesive
-- Avoid circular dependencies
-
-## Adding Features
-
-### New UI Components
-
-1. Define component in `internal/ui/model.go`
-2. Initialize in `NewModel()`
-3. Update in `internal/ui/update.go`
-4. Render in `internal/ui/view.go`
-
-### New API Endpoints
-
-1. Add models in `internal/models/models.go`
-2. Add client method in `internal/api/client.go`
-3. Create command function in `internal/ui/update.go`
-4. Handle response in `Update()`
-
-### New Database Operations
-
-1. Add function to `internal/db/db.go`
-2. Update schema if needed (in `initSchema()`)
-3. Document the change
 
 ## Testing
 
 Currently, the project doesn't have automated tests, but contributions adding tests are welcome!
 
 ### Manual Testing Checklist
-
-When making changes, please test:
 
 - [ ] Application starts without errors
 - [ ] Configuration loading works
@@ -168,32 +128,14 @@ When making changes, please test:
 - [ ] Navigation works (keyboard and mouse)
 - [ ] Dialogs open and close properly
 - [ ] Application quits cleanly
-- [ ] Screen clears on exit
 
 ### Future: Automated Tests
 
-We plan to add:
+Contributions in these areas are especially welcome:
+
 - Unit tests for each package
 - Integration tests for data flow
 - UI state transition tests
-
-Contributions in this area are especially welcome!
-
-## Documentation
-
-### Code Documentation
-
-- Add package-level comments for each package
-- Document all exported types and functions
-- Include examples in comments where helpful
-- Update ARCHITECTURE.md for significant changes
-
-### User Documentation
-
-- Update README.md for user-facing changes
-- Add examples for new features
-- Update key bindings in documentation
-- Keep installation instructions current
 
 ## Pull Request Process
 
@@ -201,47 +143,23 @@ Contributions in this area are especially welcome!
    - Ensure code builds: `make build`
    - Format code: `make fmt`
    - Test manually
-   - Update documentation
-   - Write clear commit messages
+   - Update documentation if needed
 
-2. **PR Description**
-   Include:
+2. **PR Description** should include:
    - What problem does this solve?
    - What changes were made?
    - How to test the changes?
-   - Screenshots (if UI changes)
-   - Related issues
 
 3. **Review Process**
    - Maintainers will review your PR
    - Address any feedback
-   - Make requested changes
    - PR will be merged when approved
 
-4. **After Merge**
-   - Delete your feature branch
-   - Pull latest main
-   - Celebrate! 🎉
+## Documentation
 
-## Project Structure
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed architecture information.
-
-```
-be-my-eyes/
-├── cmd/be-my-eyes/          # Application entry point
-├── internal/                # Private application code
-│   ├── api/                # API client
-│   ├── config/             # Configuration
-│   ├── db/                 # Database
-│   ├── models/             # Data models
-│   └── ui/                 # TUI components
-├── .devcontainer/          # Dev container config
-├── ARCHITECTURE.md         # Architecture docs
-├── CONTRIBUTING.md         # This file
-├── Makefile               # Build automation
-└── README.md              # User documentation
-```
+- Update README.md for user-facing changes
+- Update HOW-IT-WORKS.md for technical changes
+- Add code comments for complex logic
 
 ## Common Tasks
 
