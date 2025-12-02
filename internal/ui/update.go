@@ -296,7 +296,11 @@ func (m Model) updateMainView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Navigate up in active section or scroll details
 		if m.activeSection == StatusSection {
 			// Scroll details view up
-			m.detailsView.LineUp(3)
+			newOffset := m.detailsView.YOffset - 3
+			if newOffset < 0 {
+				newOffset = 0
+			}
+			m.detailsView.SetYOffset(newOffset)
 		} else {
 			switch m.activeSection {
 			case LibrarySection:
@@ -313,7 +317,14 @@ func (m Model) updateMainView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Navigate down in active section or scroll details
 		if m.activeSection == StatusSection {
 			// Scroll details view down
-			m.detailsView.LineDown(3)
+			newOffset := m.detailsView.YOffset + 3
+			if newOffset > m.detailsView.TotalLineCount()-m.detailsView.Height {
+				newOffset = m.detailsView.TotalLineCount() - m.detailsView.Height
+			}
+			if newOffset < 0 {
+				newOffset = 0
+			}
+			m.detailsView.SetYOffset(newOffset)
 		} else {
 			switch m.activeSection {
 			case LibrarySection:
