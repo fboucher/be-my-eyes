@@ -3,7 +3,6 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -14,13 +13,7 @@ import (
 // uploadVideo calls the external API to upload a video
 func (m Model) uploadVideo(title, url string) tea.Cmd {
 	return func() tea.Msg {
-		req := map[string]interface{}{
-			"index":                          true,
-			"video_name":                     title,
-			"video_url":                      url,
-			"video_start_absolute_timestamp": time.Now().Format("2006-01-02T15:04:05"),
-		}
-		_, err := m.apiClient.DoRawRequest("POST", "/videos/upload", req)
+		_, err := m.apiClient.UploadVideo(title, url, true)
 		if err != nil {
 			return videosLoadedMsg{videos: nil, err: err}
 		}
@@ -181,6 +174,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.updateMainView(msg)
 		case QuestionDialogView:
 			return m.updateQuestionDialog(msg)
+		case UploadDialogView:
+			return m.updateUploadDialog(msg)
 		case MenuView:
 			return m.updateMenuView(msg)
 		case HelpView:
@@ -370,6 +365,64 @@ func (m Model) updateQuestionDialog(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// Update textarea
 	var cmd tea.Cmd
 	m.questionInput, cmd = m.questionInput.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
+}
+
+// updateUploadDialog handles input in the upload dialog
+func (m Model) updateUploadDialog(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
+	switch msg.String() {
+	case "esc":
+		m.viewMode = MainView
+		return m, nil
+
+	case "tab":
+		// Switch focus to next field
+		m.uploadFocus = (m.uploadFocus + 1) % 2
+		if m.uploadFocus == 0 {
+			m.uploadURLInput.Blur()
+			m.uploadTitleInput.Focus()
+		} else {
+			m.uploadTitleInput.Blur()
+			m.uploadURLInput.Focus()
+		}
+		return m, nil
+
+	case "shift+tab", "btab":
+		// Switch focus to previous field
+		m.uploadFocus = (m.uploadFocus - 1 + 2) % 2
+		if m.uploadFocus == 0 {
+			m.uploadURLInput.Blur()
+			m.uploadTitleInput.Focus()
+		} else {
+			m.uploadTitleInput.Blur()
+			m.uploadURLInput.Focus()
+		}
+		return m, nil
+
+	case "enter":
+		// Submit upload
+		title := m.uploadTitleInput.Value()
+		url := m.uploadURLInput.Value()
+		if title != "" && url != "" {
+			m.viewMode = MainView
+			m.isLoading = true
+			m.statusMessage = "Uploading video..."
+			cmds = append(cmds, m.uploadVideo(title, url))
+		}
+		return m, tea.Batch(cmds...)
+	}
+
+	// Update the focused textarea
+	var cmd tea.Cmd
+	if m.uploadFocus == 0 {
+		m.uploadTitleInput, cmd = m.uploadTitleInput.Update(msg)
+	} else {
+		m.uploadURLInput, cmd = m.uploadURLInput.Update(msg)
+	}
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)

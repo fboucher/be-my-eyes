@@ -26,7 +26,7 @@ func (m Model) viewUploadDialog() string {
 		lipgloss.JoinHorizontal(lipgloss.Top, titleLabel, " ", titleInput),
 		lipgloss.JoinHorizontal(lipgloss.Top, urlLabel, " ", urlInput),
 		"",
-		footerStyle.Render("tab: switch, enter: upload, esc: cancel"),
+		footerStyle.Render("tab/shift+tab: switch, enter: upload, esc: cancel"),
 	)
 	dialog := dialogStyle.Render(content)
 	return lipgloss.Place(

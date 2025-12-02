@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"time"
 
@@ -40,6 +41,53 @@ func (c *Client) DoRawRequest(method, endpoint string, body interface{}) ([]byte
 
 	req.Header.Set("X-Api-Key", c.apiKey)
 	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	return respBody, nil
+}
+
+// UploadVideo uploads a video with multipart/form-data format
+func (c *Client) UploadVideo(videoName, videoURL string, index bool) ([]byte, error) {
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+
+	// Add form fields
+	if err := writer.WriteField("index", fmt.Sprintf("%t", index)); err != nil {
+		return nil, fmt.Errorf("failed to write index field: %w", err)
+	}
+	if err := writer.WriteField("video_name", videoName); err != nil {
+		return nil, fmt.Errorf("failed to write video_name field: %w", err)
+	}
+	if err := writer.WriteField("video_url", videoURL); err != nil {
+		return nil, fmt.Errorf("failed to write video_url field: %w", err)
+	}
+
+	// Close the writer to finalize the multipart message
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/videos/upload", &buf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("X-Api-Key", c.apiKey)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
