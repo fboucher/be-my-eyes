@@ -4,6 +4,8 @@ A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / search
 
 **Be My Eyes** uses [Reka Vision API](https://www.reka.ai/) and is 100% compatible with the free tier API key.
 
+![be-my-eye app running in the terminal](assets/interface.png)
+
 ## Features
 
 - 🎬 **Video Library Management**: Browse your indexed videos from the Reka API
@@ -91,19 +93,6 @@ be-my-eyes
 | `enter` | Execute selected menu action |
 | `↑` / `↓` | Navigate menu items |
 
-## Interface Layout
-
-![be-my-eye app running in the terminal](assets/be-my-eyes-look.png)
-
-### Asking Questions
-
-1. Press `r` to refresh and load your video library from the Reka API
-2. Use `↑` / `↓` to select a video (Videos section should be active by default)
-3. Press `a` to open the question dialog
-4. Type your question
-5. Press `ctrl+s` to submit
-6. The answer will appear in the History section
-7. Press `tab` to switch to History and view the full response
 
 ## Development
 
