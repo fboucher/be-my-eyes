@@ -2,7 +2,7 @@
 
 A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / searching into videos. Simply add a video into **Be My Eyes** let AI watch it, then ask anything you want about that video!
 
-**Be My Eyes** uses [Reka Vision API](https://www.reka.ai/) and is 100% compatible with the free tier API key. 
+**Be My Eyes** uses [Reka Vision API](https://www.reka.ai/) and is 100% compatible with the free tier API key.
 
 ## Features
 
@@ -14,7 +14,7 @@ A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / search
 
 ## Installation
 
-You can install **Be My Eyes** using Homebrew on macOS/Linux or via a `.deb` package for Debian/Ubuntu. 
+You can install **Be My Eyes** using Homebrew on macOS/Linux or via a `.deb` package for Debian/Ubuntu. Install via pacman is on the todo list (haapy to get PRs!).
 
 ### Homebrew (macOS/Linux)
 
@@ -119,9 +119,8 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 
 ## Support
 
-If you encounter any issues or have questions, please [open an issue on GitHub](https://github.com/fboucher/be-my-eyes/issues).
+This is at a demo stage. If you encounter any issues or have questions, please [open an issue on GitHub](https://github.com/fboucher/be-my-eyes/issues).
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details
-
