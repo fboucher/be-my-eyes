@@ -108,12 +108,7 @@ jobs:
           TAG="${{ needs.release-linux.outputs.tag }}"
           echo "Looking up release for tag ${TAG}"
           RELEASE_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${TAG}")
-          RELEASE_ID=$(echo "$RELEASE_JSON" | python - <<'PY'
-import sys, json
-j=json.load(sys.stdin)
-print(j.get("id") or "")
-PY
-)
+          RELEASE_ID=$(echo "$RELEASE_JSON" | python -c 'import sys, json; print(json.load(sys.stdin).get("id") or "")')
           if [ -z "$RELEASE_ID" ]; then
             echo "Release not found for tag ${TAG}"
             exit 1
