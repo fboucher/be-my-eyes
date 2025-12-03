@@ -15,16 +15,18 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Release
+  release-linux:
+    name: Release (linux)
     runs-on: ubuntu-latest
-    
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Determine tag
         id: tag
         run: |
@@ -33,42 +35,106 @@ jobs:
           else
             TAG="${GITHUB_REF#refs/tags/}"
           fi
-          echo "TAG=$TAG"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-      
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
-      
+
       - name: Install ARM64 cross-compiler
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
-      
+
       - name: Verify cross-compiler
         run: |
           which aarch64-linux-gnu-gcc || { echo "aarch64-linux-gnu-gcc not found"; exit 1; }
           aarch64-linux-gnu-gcc --version
-      
-      - name: Run GoReleaser
+
+      - name: Run GoReleaser (publish Linux artifacts and create the release)
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-      
-      - name: Upload release summary
+
+  build-macos:
+    name: Build macOS and upload assets
+    runs-on: macos-latest
+    needs: release-linux
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Create macOS-only GoReleaser config
         run: |
-          echo "## Release ${{ steps.tag.outputs.tag }} completed successfully! 🎉" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Artifacts created:" >> $GITHUB_STEP_SUMMARY
-          echo "- Cross-platform binaries (Linux amd64/arm64, macOS amd64/arm64)" >> $GITHUB_STEP_SUMMARY
-          echo "- Debian packages (.deb for amd64 and arm64)" >> $GITHUB_STEP_SUMMARY
-          echo "- Checksums file" >> $GITHUB_STEP_SUMMARY
-          echo "- Homebrew tap updated (if token provided)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "View the release at: https://github.com/${{ github.repository }}/releases/tag/${{ steps.tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          cat > .goreleaser-macos.yml <<'YAML'
+          builds:
+            - id: darwin-only
+              main: .
+              goos: darwin
+              goarch:
+                - amd64
+                - arm64
+              env:
+                - CGO_ENABLED=0
+          archive:
+            format: tar.gz
+          YAML
+
+      - name: Build macOS artifacts with GoReleaser (darwin only)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: build --rm-dist --config .goreleaser-macos.yml --skip-validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get release ID for tag
+        id: get_release
+        run: |
+          TAG="${{ needs.release-linux.outputs.tag }}"
+          echo "Looking up release for tag ${TAG}"
+          RELEASE_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/${TAG}")
+          RELEASE_ID=$(python - <<'PY'
+import sys, json
+j=json.load(sys.stdin)
+print(j.get("id") or "")
+PY
+<<<"$RELEASE_JSON")
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Release not found for tag ${TAG}"
+            exit 1
+          fi
+          echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
+
+      - name: Upload macOS artifacts to release
+        run: |
+          RELEASE_ID=${{ steps.get_release.outputs.release_id }}
+          REPO="${{ github.repository }}"
+          echo "Uploading files in dist/*darwin* to release ${RELEASE_ID}"
+          for f in dist/*darwin* dist/*macos* dist/*darwin_amd64* dist/*darwin_arm64*; do
+            [ -f "$f" ] || continue
+            NAME=$(basename "$f")
+            echo "Uploading $NAME"
+            curl -s \
+              -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$f" \
+              "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
