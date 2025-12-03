@@ -40,11 +40,11 @@ builds:
       - goos: darwin
         goarch: amd64
         env:
-          - CGO_ENABLED=0
+          - CGO_ENABLED=1
       - goos: darwin
         goarch: arm64
         env:
-          - CGO_ENABLED=0
+          - CGO_ENABLED=1
 
 archives:
   - id: default
@@ -114,9 +114,6 @@ brews:
     description: "A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / searching into videos using AI"
     
     license: "MIT"
-    
-    dependencies:
-      - name: sqlite
 
     install: |
       bin.install "be-my-eyes"

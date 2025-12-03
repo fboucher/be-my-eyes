@@ -18,8 +18,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    env:
-      CGO_ENABLED: "0"
     
     steps:
       - name: Checkout
@@ -60,7 +58,6 @@ jobs:
           version: latest
           args: release --clean
         env:
-          CGO_ENABLED: "0"
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
       
