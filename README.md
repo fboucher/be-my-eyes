@@ -1,51 +1,22 @@
 # Be My Eyes
 
-A Terminal User Interface (TUI) for interacting with the [Reka Vision AI API](https://www.reka.ai/). Ask questions about your videos through an intuitive terminal interface.
+A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / searching into videos. Simply add a video into **Be My Eyes** let AI watch it, then ask anything you want about that video!
+
+**Be My Eyes** uses [Reka Vision API](https://www.reka.ai/) and is 100% compatible with the free tier API key. 
 
 ## Features
 
 - 🎬 **Video Library Management**: Browse your indexed videos from the Reka API
 - ❓ **Interactive Q&A**: Ask questions about video content using AI
-- 📜 **Query History**: Review past questions and answers stored locally in SQLite
-- 🖱️ **Mouse & Keyboard**: Navigate using keyboard shortcuts or mouse
-- 💾 **Local Storage**: SQLite database for persistent query history with video clips
+- 📜 **Query History**: Review past questions and answers
+- 💾 **Local Storage**: SQLite database for persistent query history
 - 🎨 **Beautiful TUI**: Clean interface built with [Bubble Tea](https://github.com/charmbracelet/bubbletea)
 
 ## Installation
 
-### Prerequisites
+You can install **Be My Eyes** using Homebrew on macOS/Linux or via a `.deb` package for Debian/Ubuntu. 
 
-- Go 1.21 or later
-- A Reka AI API key (get one at [reka.ai](https://www.reka.ai/))
-
-### From Source
-
-```bash
-# Clone the repository
-git clone https://github.com/fboucher/be-my-eyes.git
-cd be-my-eyes
-
-# Download dependencies
-make deps
-
-# Option 1: Build and run directly
-make run
-
-# Option 2: Build the binary first, then run it
-make build
-./be-my-eyes
-
-# Option 3: Run with Go directly (no build step)
-go run ./cmd/be-my-eyes
-
-# Option 4: Install to $GOPATH/bin (makes it available system-wide)
-make install
-be-my-eyes  # Now available anywhere in your terminal
-```
-
-### Using Package Managers
-
-#### Homebrew (macOS/Linux)
+### Homebrew (macOS/Linux)
 
 ```bash
 brew tap fboucher/tap
@@ -57,12 +28,12 @@ brew install be-my-eyes
 Download the `.deb` file from the [latest release](https://github.com/fboucher/be-my-eyes/releases/latest) and install:
 
 ```bash
-sudo dpkg -i be-my-eyes_*_amd64.deb
+sudo apt install be-my-eyes_*_amd64.deb
 ```
 
 ## Configuration
 
-Before running the application, you need to configure your Reka API key.
+Before running the application, you need to configure your Reka API key, get yours at [here 🔑](https://link.reka.ai/free). Then you can use one of the following options.
 
 ### Option 1: Environment Variable
 
@@ -70,7 +41,7 @@ Before running the application, you need to configure your Reka API key.
 export REKA_API_KEY=your_api_key_here
 ```
 
-### Option 2: Configuration File
+### Option 2: Configuration File (Recommended)
 
 The application will automatically save your API key from the environment variable to `~/.config/be-my-eyes/config.json` on first run. Alternatively, create it manually:
 
@@ -122,20 +93,7 @@ be-my-eyes
 
 ## Interface Layout
 
-```text
-┌─────────── Status ──────────┐ ┌────────── Details ───────────┐
-│ Connected                   │ │ Title: Example Video         │
-└─────────────────────────────┘ │ ID: vid_123456               │
-┌─────────── Videos ──────────┐ │ Status: INDEXED              │
-│ ▸ Video A    INDEXED • 123s │ │ Duration: 123.4s             │
-│   Video B    PROCESSING     │ │ Resolution: 1920x1080        │
-└─────────────────────────────┘ │ FPS: 30.0                    │
-┌─────────── History ─────────┐ │                              │
-│ Q: "What's in this video?"  │ │                              │
-│ Q: "Summarize the content"  │ │                              │
-└─────────────────────────────┘ └──────────────────────────────┘
- r: refresh, a: ask question, x: menu, q: quit, tab: section, ↑↓: navigate
-```
+![be-my-eye app running in the terminal](assets/be-my-eyes-look.png)
 
 ### Asking Questions
 
@@ -147,79 +105,17 @@ be-my-eyes
 6. The answer will appear in the History section
 7. Press `tab` to switch to History and view the full response
 
-### Menu Actions
-
-Press `x` to open the menu. Available actions:
-
-- **Ask a Question**: When a video is selected in the Videos section
-- **Refresh Library**: Update the video list from the Reka API
-- **Help**: Display the help screen with keyboard shortcuts
-- **About**: Show information about the application
-- **Quit**: Exit the application
-
 ## Development
 
-### Project Structure
-
-```text
-be-my-eyes/
-├── cmd/be-my-eyes/       # Main application entry point
-├── internal/
-│   ├── api/              # Reka API client
-│   ├── config/           # Configuration management
-│   ├── db/               # SQLite database operations
-│   ├── models/           # Data models
-│   ├── ui/               # TUI components (Bubble Tea)
-│   └── version/          # Version information
-├── Makefile              # Build automation
-└── go.mod                # Go module definition
-```
-
-See [HOW-IT-WORKS.md](HOW-IT-WORKS.md) for detailed technical documentation.
-
-### Building from Source
-
-```bash
-# Download dependencies
-make deps
-
-# Build the application
-make build
-
-# Format code
-make fmt
-
-# Build for all platforms
-make build-all
-```
-
-### Dev Container
-
-This project includes a VS Code dev container configuration:
-
-1. Install Docker and VS Code with the Remote-Containers extension
-2. Open the project in VS Code
-3. Click "Reopen in Container" when prompted
-
-## API Integration
-
-This application uses the Reka Vision AI API:
-
-- `POST /videos/get`: Retrieve video metadata and indexing status
-- `POST /qa/chat`: Ask questions about videos with timestamped clips
-
-See [HOW-IT-WORKS.md](HOW-IT-WORKS.md) for details on the database schema and API integration.
+Have a look at [DEVELOPER.md](DEVELOPER.md) for more information on building from source and the project structure.
 
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Credits
+## References
 
-- **Creator**: [fboucher](https://github.com/fboucher)
-- **TUI Framework**: [Bubble Tea](https://github.com/charmbracelet/bubbletea)
-- **UI Components**: [Bubbles](https://github.com/charmbracelet/bubbles)
-- **Styling**: [Lipgloss](https://github.com/charmbracelet/lipgloss)
+- [Reka AI API Docs](https://link.reka.ai/doc-vision)
 
 ## Support
 
@@ -229,6 +125,3 @@ If you encounter any issues or have questions, please [open an issue on GitHub](
 
 MIT License - see [LICENSE](LICENSE) for details
 
----
-
-Built with ❤️ using Go and Bubble Tea
