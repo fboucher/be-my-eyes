@@ -58,8 +58,7 @@ archives:
     files:
       - README.md
       - LICENSE
-      - QUICKSTART.md
-      - ARCHITECTURE.md
+      - DEVELOPER.md
       - CONTRIBUTING.md
 
 checksum:
@@ -112,7 +111,7 @@ brews:
       name: homebrew-tap
     
     homepage: https://github.com/fboucher/be-my-eyes
-    description: "TUI for Reka Vision AI API"
+    description: "A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / searching into videos using AI"
     
     license: "MIT"
     
