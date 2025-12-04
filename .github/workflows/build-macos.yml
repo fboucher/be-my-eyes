@@ -42,7 +42,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: build --config .goreleaser-macos.yml --skip=validate
+          args: release --clean --config .goreleaser-macos.yml --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -67,8 +67,9 @@ jobs:
           echo "Uploading macOS binaries to release ${RELEASE_ID}"
           echo "Looking for artifacts in dist/"
           ls -la dist/ || echo "dist/ directory not found"
-          for f in dist/*darwin*/*.tar.gz; do
+          for f in dist/*.tar.gz; do
             [ -f "$f" ] || continue
+            [[ "$f" == *darwin* ]] || continue
             NAME=$(basename "$f")
             echo "Uploading $NAME"
             RESPONSE=$(curl -s -w "\n%{http_code}" \
