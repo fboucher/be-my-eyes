@@ -79,7 +79,7 @@ jobs:
               --data-binary @"$f" \
               "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}")
             HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
-            BODY=$(echo "$RESPONSE" | head -n -1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
             if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 200 ]; then
               echo "✓ Successfully uploaded $NAME (HTTP $HTTP_CODE)"
             else
