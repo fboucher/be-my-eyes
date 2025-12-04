@@ -1,0 +1,85 @@
+version: 2
+project_name: be-my-eyes
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: linux-build
+    main: ./cmd/be-my-eyes
+    binary: be-my-eyes
+
+    goos:
+      - linux
+
+    goarch:
+      - amd64
+      - arm64
+
+    ldflags:
+      - -s -w
+      - -X github.com/fboucher/be-my-eyes/internal/version.Version={{.Version}}
+
+    overrides:
+      - goos: linux
+        goarch: arm64
+        env:
+          - CC=aarch64-linux-gnu-gcc
+          - CGO_ENABLED=1
+      - goos: linux
+        goarch: amd64
+        env:
+          - CGO_ENABLED=1
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+
+    files:
+      - README.md
+      - LICENSE
+      - DEVELOPER.md
+      - CONTRIBUTING.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^ci:'
+
+nfpms:
+  - id: packages
+    package_name: be-my-eyes
+    vendor: Frank Boucher
+    homepage: https://github.com/fboucher/be-my-eyes
+    maintainer: Frank Boucher <frank@reka.ai>
+    description: TUI for interacting with the Reka Vision AI API
+    license: MIT
+
+    formats:
+      - deb
+
+    bindir: /usr/bin
+
+    builds:
+      - linux-build
+
+    deb:
+      fields:
+        Priority: optional

@@ -1,0 +1,49 @@
+name: Publish to Homebrew
+
+on:
+  workflow_run:
+    workflows: ["Build macOS"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  publish-brew:
+    name: Update Homebrew tap
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine tag
+        id: tag
+        run: |
+          # Get the most recent version tag
+          TAG=$(git tag --list 'v*.*.*' --sort=-version:refname --merged HEAD | head -n 1)
+          if [ -z "$TAG" ]; then
+            echo "ERROR: No version tag found"
+            exit 1
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Using tag: $TAG"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Download macOS binaries and publish to Homebrew
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --config .goreleaser-brew.yml --skip-validate --skip-publish=false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}

@@ -1,0 +1,47 @@
+version: 2
+project_name: be-my-eyes
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: macos-build
+    main: ./cmd/be-my-eyes
+    binary: be-my-eyes
+
+    goos:
+      - darwin
+
+    goarch:
+      - amd64
+      - arm64
+
+    ldflags:
+      - -s -w
+      - -X github.com/fboucher/be-my-eyes/internal/version.Version={{.Version}}
+
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+
+    files:
+      - README.md
+      - LICENSE
+      - DEVELOPER.md
+      - CONTRIBUTING.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
