@@ -67,7 +67,7 @@ jobs:
           echo "Uploading macOS binaries to release ${RELEASE_ID}"
           echo "Looking for artifacts in dist/"
           ls -la dist/ || echo "dist/ directory not found"
-          for f in dist/*darwin*; do
+          for f in dist/*darwin*/*.tar.gz; do
             [ -f "$f" ] || continue
             NAME=$(basename "$f")
             echo "Uploading $NAME"
