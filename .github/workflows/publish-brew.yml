@@ -42,7 +42,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --config .goreleaser-brew.yml --skip-validate --skip-publish=false
+          args: release --config .goreleaser-brew.yml --skip=validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
