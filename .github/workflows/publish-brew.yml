@@ -42,7 +42,7 @@ jobs:
           cd tap
           
           # Update the formula
-          cat > Formula/be-my-eyes.rb << EOF
+          cat > be-my-eyes.rb << EOF
           class BeMyEyes < Formula
             desc "A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / searching into videos using AI"
             homepage "https://github.com/fboucher/be-my-eyes"
@@ -70,7 +70,7 @@ jobs:
           # Commit and push
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/be-my-eyes.rb
+          git add be-my-eyes.rb
           git commit -m "Update be-my-eyes to ${VERSION}" || echo "No changes to commit"
           git push
         env:
