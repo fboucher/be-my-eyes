@@ -65,16 +65,27 @@ jobs:
           RELEASE_ID=${{ steps.get_release.outputs.release_id }}
           REPO="${{ github.repository }}"
           echo "Uploading macOS binaries to release ${RELEASE_ID}"
+          echo "Looking for artifacts in dist/"
+          ls -la dist/ || echo "dist/ directory not found"
           for f in dist/*darwin*; do
             [ -f "$f" ] || continue
             NAME=$(basename "$f")
             echo "Uploading $NAME"
-            curl -s \
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
               -X POST \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
               -H "Content-Type: application/octet-stream" \
               --data-binary @"$f" \
-              "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}"
+              "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${NAME}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+            BODY=$(echo "$RESPONSE" | head -n -1)
+            if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 200 ]; then
+              echo "✓ Successfully uploaded $NAME (HTTP $HTTP_CODE)"
+            else
+              echo "✗ Failed to upload $NAME (HTTP $HTTP_CODE)"
+              echo "Response: $BODY"
+              exit 1
+            fi
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
