@@ -4,7 +4,6 @@ on:
   workflow_run:
     workflows: ["Build macOS"]
     types: [completed]
-    branches: [main]
 
 permissions:
   contents: read

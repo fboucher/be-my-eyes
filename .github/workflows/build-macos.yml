@@ -4,7 +4,6 @@ on:
   workflow_run:
     workflows: ["Build Linux"]
     types: [completed]
-    branches: [main]
 
 permissions:
   contents: write
