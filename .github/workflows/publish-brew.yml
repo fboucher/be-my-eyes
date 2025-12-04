@@ -32,17 +32,46 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Using tag: $TAG"
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-
-      - name: Download macOS binaries and publish to Homebrew
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --config .goreleaser-brew.yml --skip=validate
+      - name: Update Homebrew formula
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          VERSION="${TAG#v}"
+          
+          # Clone the tap repository
+          git clone https://oauth2:${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/fboucher/homebrew-tap.git tap
+          cd tap
+          
+          # Update the formula
+          cat > Formula/be-my-eyes.rb << EOF
+          class BeMyEyes < Formula
+            desc "A Terminal User Interface (TUI) for analyzing/ summarizing/ questioning / searching into videos using AI"
+            homepage "https://github.com/fboucher/be-my-eyes"
+            version "${VERSION}"
+            license "MIT"
+          
+            if OS.mac?
+              if Hardware::CPU.arm?
+                url "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_darwin_arm64.tar.gz"
+              else
+                url "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_darwin_amd64.tar.gz"
+              end
+            end
+          
+            def install
+              bin.install "be-my-eyes"
+            end
+          
+            test do
+              system "#{bin}/be-my-eyes", "--version"
+            end
+          end
+          EOF
+          
+          # Commit and push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/be-my-eyes.rb
+          git commit -m "Update be-my-eyes to ${VERSION}" || echo "No changes to commit"
+          git push
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
