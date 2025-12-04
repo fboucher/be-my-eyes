@@ -22,16 +22,8 @@ builds:
       - -s -w
       - -X github.com/fboucher/be-my-eyes/internal/version.Version={{.Version}}
 
-    overrides:
-      - goos: linux
-        goarch: arm64
-        env:
-          - CC=aarch64-linux-gnu-gcc
-          - CGO_ENABLED=1
-      - goos: linux
-        goarch: amd64
-        env:
-          - CGO_ENABLED=1
+    env:
+      - CGO_ENABLED=0
 
 archives:
   - id: default
