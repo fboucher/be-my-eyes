@@ -32,6 +32,36 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Using tag: $TAG"
 
+      - name: Download release artifacts and calculate checksums
+        id: checksums
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          VERSION="${TAG#v}"
+          
+          # Download and calculate checksums
+          echo "Downloading release artifacts..."
+          
+          curl -sL "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_darwin_arm64.tar.gz" -o darwin_arm64.tar.gz
+          curl -sL "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_darwin_amd64.tar.gz" -o darwin_amd64.tar.gz
+          curl -sL "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_linux_arm64.tar.gz" -o linux_arm64.tar.gz
+          curl -sL "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_linux_amd64.tar.gz" -o linux_amd64.tar.gz
+          
+          DARWIN_ARM64_SHA=$(shasum -a 256 darwin_arm64.tar.gz | cut -d ' ' -f 1)
+          DARWIN_AMD64_SHA=$(shasum -a 256 darwin_amd64.tar.gz | cut -d ' ' -f 1)
+          LINUX_ARM64_SHA=$(shasum -a 256 linux_arm64.tar.gz | cut -d ' ' -f 1)
+          LINUX_AMD64_SHA=$(shasum -a 256 linux_amd64.tar.gz | cut -d ' ' -f 1)
+          
+          echo "darwin_arm64_sha=${DARWIN_ARM64_SHA}" >> $GITHUB_OUTPUT
+          echo "darwin_amd64_sha=${DARWIN_AMD64_SHA}" >> $GITHUB_OUTPUT
+          echo "linux_arm64_sha=${LINUX_ARM64_SHA}" >> $GITHUB_OUTPUT
+          echo "linux_amd64_sha=${LINUX_AMD64_SHA}" >> $GITHUB_OUTPUT
+          
+          echo "Checksums calculated:"
+          echo "  darwin_arm64: ${DARWIN_ARM64_SHA}"
+          echo "  darwin_amd64: ${DARWIN_AMD64_SHA}"
+          echo "  linux_arm64: ${LINUX_ARM64_SHA}"
+          echo "  linux_amd64: ${LINUX_AMD64_SHA}"
+
       - name: Update Homebrew formula
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
@@ -52,20 +82,20 @@ jobs:
             on_macos do
               if Hardware::CPU.arm?
                 url "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_darwin_arm64.tar.gz"
-                sha256 "PLACEHOLDER_ARM64"
+                sha256 "${{ steps.checksums.outputs.darwin_arm64_sha }}"
               else
                 url "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_darwin_amd64.tar.gz"
-                sha256 "PLACEHOLDER_AMD64"
+                sha256 "${{ steps.checksums.outputs.darwin_amd64_sha }}"
               end
             end
           
             on_linux do
               if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
                 url "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_linux_arm64.tar.gz"
-                sha256 "PLACEHOLDER_LINUX_ARM64"
+                sha256 "${{ steps.checksums.outputs.linux_arm64_sha }}"
               else
                 url "https://github.com/fboucher/be-my-eyes/releases/download/${TAG}/be-my-eyes_${VERSION}_linux_amd64.tar.gz"
-                sha256 "PLACEHOLDER_LINUX_AMD64"
+                sha256 "${{ steps.checksums.outputs.linux_amd64_sha }}"
               end
             end
           
